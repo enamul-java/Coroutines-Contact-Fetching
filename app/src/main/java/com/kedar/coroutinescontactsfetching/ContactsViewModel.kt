@@ -15,9 +15,15 @@ class ContactsViewModel(val mApplication: Application) : AndroidViewModel(mAppli
     private val _contactsLiveData = MutableLiveData<ArrayList<Contact>>()
     val contactsLiveData:LiveData<ArrayList<Contact>> = _contactsLiveData
 
-    fun fetchContacts() {
+    fun fetchContacts(searchString: String) {
         viewModelScope.launch {
-            val contactsListAsync = async { getPhoneContacts() }
+            val contactsListAsync = async {
+                if(searchString.isEmpty()) {
+                    getPhoneContacts(searchString)
+                }else{
+                    getPhoneContacts2(searchString)
+                }
+            }
             val contactNumbersAsync = async { getContactNumbers() }
             val contactEmailAsync = async { getContactEmails() }
 
@@ -37,7 +43,39 @@ class ContactsViewModel(val mApplication: Application) : AndroidViewModel(mAppli
         }
     }
 
-    private suspend fun getPhoneContacts(): ArrayList<Contact> {
+    private suspend fun getPhoneContacts2(searchString:String): ArrayList<Contact> {
+        val contactsList = ArrayList<Contact>()
+
+        val whereString = "display_name LIKE ?"
+        val whereParams = arrayOf("%" + searchString + "%")
+
+        val searchStringArray:Array<String>? = arrayOf(searchString)
+
+        val contactsCursor = mApplication.contentResolver?.query(
+                ContactsContract.Contacts.CONTENT_URI,
+                null,
+                whereString,
+                  //"display_name = ? ", //"display_name "+" like '%"+'?'+"%'"
+                whereParams,
+                ContactsContract.CommonDataKinds.Phone.DISPLAY_NAME + " ASC")
+
+
+        if (contactsCursor != null && contactsCursor.count > 0) {
+            val idIndex = contactsCursor.getColumnIndex(ContactsContract.Contacts._ID)
+            val nameIndex = contactsCursor.getColumnIndex(ContactsContract.Contacts.DISPLAY_NAME)
+            while (contactsCursor.moveToNext()) {
+                val id = contactsCursor.getString(idIndex)
+                val name = contactsCursor.getString(nameIndex)
+                if (name != null) {
+                    contactsList.add(Contact(id, name))
+                }
+            }
+            contactsCursor.close()
+        }
+        return contactsList
+    }
+
+    private suspend fun getPhoneContacts(searchString:String): ArrayList<Contact> {
         val contactsList = ArrayList<Contact>()
         val contactsCursor = mApplication.contentResolver?.query(
                 ContactsContract.Contacts.CONTENT_URI,
@@ -45,6 +83,8 @@ class ContactsViewModel(val mApplication: Application) : AndroidViewModel(mAppli
                 null,
                 null,
                 ContactsContract.CommonDataKinds.Phone.DISPLAY_NAME + " ASC")
+
+
         if (contactsCursor != null && contactsCursor.count > 0) {
             val idIndex = contactsCursor.getColumnIndex(ContactsContract.Contacts._ID)
             val nameIndex = contactsCursor.getColumnIndex(ContactsContract.Contacts.DISPLAY_NAME)
