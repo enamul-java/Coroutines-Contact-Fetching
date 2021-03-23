@@ -2,6 +2,7 @@ package com.kedar.coroutinescontactsfetching
 
 import android.app.Application
 import android.database.Cursor
+import android.net.Uri
 import android.provider.ContactsContract
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.LiveData
@@ -46,6 +47,7 @@ class ContactsViewModel(val mApplication: Application) : AndroidViewModel(mAppli
     private suspend fun getPhoneContacts2(searchString:String): ArrayList<Contact> {
         val contactsList = ArrayList<Contact>()
 
+        //val whereString = "display_name LIKE ? and contact_id LIKE ?"
         val whereString = "display_name LIKE ?"
         val whereParams = arrayOf("%" + searchString + "%")
 
@@ -57,7 +59,8 @@ class ContactsViewModel(val mApplication: Application) : AndroidViewModel(mAppli
                 whereString,
                   //"display_name = ? ", //"display_name "+" like '%"+'?'+"%'"
                 whereParams,
-                ContactsContract.CommonDataKinds.Phone.DISPLAY_NAME + " ASC")
+                null)
+        //ContactsContract.CommonDataKinds.Phone.DISPLAY_NAME + " ASC"
 
 
         if (contactsCursor != null && contactsCursor.count > 0) {
@@ -73,6 +76,20 @@ class ContactsViewModel(val mApplication: Application) : AndroidViewModel(mAppli
             contactsCursor.close()
         }
         return contactsList
+    }
+
+    fun getContactName(phoneNumber: String?): String? {
+        val uri: Uri = Uri.withAppendedPath(ContactsContract.PhoneLookup.CONTENT_FILTER_URI, Uri.encode(phoneNumber))
+        val projection = arrayOf(ContactsContract.PhoneLookup.DISPLAY_NAME)
+        var contactName = ""
+        val cursor: Cursor = mApplication.contentResolver.query(uri, projection, null, null, null)!!
+        if (cursor != null) {
+            if (cursor.moveToFirst()) {
+                contactName = cursor.getString(0)
+            }
+            cursor.close()
+        }
+        return contactName
     }
 
     private suspend fun getPhoneContacts(searchString:String): ArrayList<Contact> {

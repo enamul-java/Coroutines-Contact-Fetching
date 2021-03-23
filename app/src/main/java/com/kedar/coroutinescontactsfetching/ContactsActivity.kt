@@ -11,33 +11,55 @@ import android.text.Editable
 import android.text.TextWatcher
 import android.util.Log
 import android.view.View
-import android.widget.Toast
+import android.widget.TextView
 import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.Observer
 import kotlinx.android.synthetic.main.activity_contacts.*
+import java.util.*
+import kotlin.collections.ArrayList
 
 
 class ContactsActivity : AppCompatActivity() {
     private val contactsViewModel by viewModels<ContactsViewModel>()
     private val CONTACTS_READ_REQ_CODE = 100
+    private var timer: Timer? = null
+    private lateinit var tvAllContact : TextView
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_contacts)
+
+        tvAllContact = findViewById(R.id.tvAllContact)
+
         init()
 
         search.addTextChangedListener(object : TextWatcher {
 
             override fun afterTextChanged(s: Editable?) {
-                val str = search.text.toString()
-                gettingContactNumber(str)
+
+                timer = Timer()
+                timer!!.schedule(object : TimerTask() {
+                    override fun run() {
+
+
+                        val str = search.text.toString()
+                        gettingContactNumber(str)
+
+
+                    }
+                }, 600)
+
+
 
             }
 
             override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {
+
             }
             override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {
+                timer?.cancel()
+                tvAllContact.text = "Searching....."
 
             }
 
@@ -46,11 +68,22 @@ class ContactsActivity : AppCompatActivity() {
 
     private fun init() {
         tvDefault.text = "Fetching contacts!!!"
+
         val adapter = ContactsAdapter(this)
         rvContacts.adapter = adapter
         contactsViewModel.contactsLiveData.observe(this, Observer {
             tvDefault.visibility = View.GONE
             adapter.contacts = it
+
+            var count = rvContacts.adapter!!.itemCount
+            //tvAllContact.text = "Found $count Matching  Contact"
+            val str = search.text.toString()
+            if (str.isEmpty()){
+                tvAllContact.text = "All Contact"
+            }else{
+                tvAllContact.text = "Found $count Matching  Contact"
+            }
+
         })
         /*
         if (hasPermission(Manifest.permission.READ_CONTACTS)) {
