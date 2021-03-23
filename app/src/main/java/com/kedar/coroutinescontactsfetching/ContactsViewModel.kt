@@ -4,6 +4,7 @@ import android.app.Application
 import android.database.Cursor
 import android.net.Uri
 import android.provider.ContactsContract
+import android.util.Log
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
@@ -30,15 +31,15 @@ class ContactsViewModel(val mApplication: Application) : AndroidViewModel(mAppli
 
             val contacts = contactsListAsync.await()
             val contactNumbers = contactNumbersAsync.await()
-            val contactEmails = contactEmailAsync.await()
+            //val contactEmails = contactEmailAsync.await()
 
             contacts.forEach {
                 contactNumbers[it.id]?.let { numbers ->
                     it.numbers = numbers
                 }
-                contactEmails[it.id]?.let { emails ->
+                /*contactEmails[it.id]?.let { emails ->
                     it.emails = emails
-                }
+                }*/
             }
             _contactsLiveData.postValue(contacts)
         }
@@ -48,8 +49,28 @@ class ContactsViewModel(val mApplication: Application) : AndroidViewModel(mAppli
         val contactsList = ArrayList<Contact>()
 
         //val whereString = "display_name LIKE ? and contact_id LIKE ?"
-        val whereString = "display_name LIKE ?"
-        val whereParams = arrayOf("%" + searchString + "%")
+        var whereString = "display_name LIKE ? "
+        var whereParams = arrayOf("%" + searchString + "%")
+
+        var ids = getContactNumbersIds(searchString)
+        try {
+            if(ids.length>0){
+                whereString += " OR " + ContactsContract.Contacts._ID + " IN (" + ids + ") "
+                /*if(ids.contains(",")){
+                    whereString += " OR " + ContactsContract.Contacts._ID + " IN (" + ids + ") "
+                }else {
+                    whereString += " OR " + ContactsContract.Contacts._ID + " = ? "
+                    whereParams = arrayOf("%" + searchString + "%", ids)
+                }*/
+
+                Log.e("Projection", whereString)
+                //whereString += " OR "+ContactsContract.Contacts._ID+" = ? "
+                //whereParams = arrayOf("%" + searchString + "%", " ("+ids+") ")
+                //whereParams = arrayOf("%" + searchString + "%", " 1 ")
+            }
+        }catch (e:Exception ){}
+
+        //Log.e("Param", whereParams.size.toString() + whereParams[])
 
         val searchStringArray:Array<String>? = arrayOf(searchString)
 
@@ -59,7 +80,7 @@ class ContactsViewModel(val mApplication: Application) : AndroidViewModel(mAppli
                 whereString,
                   //"display_name = ? ", //"display_name "+" like '%"+'?'+"%'"
                 whereParams,
-                null)
+            ContactsContract.CommonDataKinds.Phone.DISPLAY_NAME + " ASC")
         //ContactsContract.CommonDataKinds.Phone.DISPLAY_NAME + " ASC"
 
 
@@ -76,6 +97,36 @@ class ContactsViewModel(val mApplication: Application) : AndroidViewModel(mAppli
             contactsCursor.close()
         }
         return contactsList
+    }
+
+    private suspend fun getContactNumbersIds(searchString:String): String {
+        var contactsIDList = ""
+
+        val whereString = ""+ContactsContract.CommonDataKinds.Phone.NUMBER+" LIKE ? "
+        val whereParams = arrayOf("%" + searchString + "%")
+
+        val phoneCursor: Cursor? = mApplication.contentResolver.query(
+            ContactsContract.CommonDataKinds.Phone.CONTENT_URI,
+            null,
+            whereString,
+            whereParams,
+            null
+        )
+        if (phoneCursor != null && phoneCursor.count > 0) {
+            val contactIdIndex = phoneCursor!!.getColumnIndex(ContactsContract.CommonDataKinds.Phone.CONTACT_ID)
+            while (phoneCursor.moveToNext()) {
+                val contactId = phoneCursor.getString(contactIdIndex)
+                contactsIDList += contactId +","
+            }
+            //contact contains all the number of a particular contact
+            phoneCursor.close()
+        }
+
+        try {
+            contactsIDList = contactsIDList.substring(0, contactsIDList.length-1)
+        }catch (e:Exception){}
+        Log.e("Contact", contactsIDList)
+        return contactsIDList
     }
 
     fun getContactName(phoneNumber: String?): String? {

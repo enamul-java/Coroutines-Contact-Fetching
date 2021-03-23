@@ -2,8 +2,8 @@
 <project version="4">
   <component name="ProjectModuleManager">
     <modules>
-      <module fileurl="file://$PROJECT_DIR$/.idea/modules/Coroutines_Contacts_Fetching.iml" filepath="$PROJECT_DIR$/.idea/modules/Coroutines_Contacts_Fetching.iml" />
-      <module fileurl="file://$PROJECT_DIR$/.idea/modules/app/Coroutines_Contacts_Fetching.app.iml" filepath="$PROJECT_DIR$/.idea/modules/app/Coroutines_Contacts_Fetching.app.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/Coroutines_Contacts_Fetching.iml" filepath="$PROJECT_DIR$/.idea/modules/Coroutines_Contacts_Fetching.iml" group="Coroutines_Contacts_Fetching" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/app/app.iml" filepath="$PROJECT_DIR$/.idea/modules/app/app.iml" group="Coroutines Contacts Fetching/app" />
     </modules>
   </component>
 </project>
