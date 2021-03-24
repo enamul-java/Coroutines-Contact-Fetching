@@ -4,6 +4,7 @@ import android.content.Context
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.TextView
 import android.widget.Toast
 import androidx.recyclerview.widget.RecyclerView
 import kotlinx.android.synthetic.main.row_contact.view.*
@@ -35,16 +36,19 @@ class ContactsAdapter(context: Context) : RecyclerView.Adapter<ContactsAdapter.M
             tvContactName.text = contact.name
             llContactDetails.removeAllViews()
             contact.numbers.forEach {
-                val detail = layoutInflater.inflate(R.layout.row_contact_data,llContactDetails,false)
+                /*val detail = layoutInflater.inflate(R.layout.row_contact_data,llContactDetails,false)
                 detail.imgIcon.setImageResource(R.drawable.ic_local_phone_black_24dp)
-                detail.tvContactData.text = it
-//                llContactDetails.setOnClickListener {
-//                    Toast.makeText(context, tvContactData.text.toString(),Toast.LENGTH_SHORT).show()
-//
-//                }
-//                tvContactData.setOnClickListener {
-//                    Toast.makeText(context, tvContactData.text.toString(),Toast.LENGTH_SHORT).show()
-//                }
+                detail.tvContactData.text = it*/
+
+                val detail = TextView(context)
+                detail.setCompoundDrawablesWithIntrinsicBounds(R.drawable.ic_local_phone_black_24dp,0, 0, 0)
+                detail.textSize = 18f
+                detail.setPadding(0,0,0,20)
+                detail.text = "  "+it
+
+                detail.setOnClickListener {
+                    Toast.makeText(context, detail.text.toString(),Toast.LENGTH_SHORT).show()
+                }
                 llContactDetails.addView(detail)
 
             }
